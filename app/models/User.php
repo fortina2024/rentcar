@@ -1,0 +1,31 @@
+<?php
+
+class User {
+    private $db;
+
+    public function __construct() {
+        $this->db = Database::getInstance();
+    }
+
+    public function register($name, $email, $password) {
+        $sql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            $name,
+            $email,
+            password_hash($password, PASSWORD_BCRYPT)
+        ]);
+    }
+
+    public function login($email, $password) {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
+
+        if ($user && password_verify($password, $user['password'])) {
+            $_SESSION['user'] = $user;
+            return true;
+        }
+        return false;
+    }
+}
